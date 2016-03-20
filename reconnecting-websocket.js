@@ -300,9 +300,30 @@
                 if (self.debug || ReconnectingWebSocket.debugAll) {
                     console.debug('ReconnectingWebSocket', 'send', self.url, data);
                 }
-                return ws.send(data);
+                this.waitForConnection(function () {
+                    return ws.send(data);
+                    if (typeof callback !== 'undefined') {
+                    	callback();
+                    }
+                 }, 1000);
+                
             } else {
                 throw 'INVALID_STATE_ERR : Pausing to reconnect websocket';
+            }
+        };
+    
+        /**
+         * Waits the send message function until connection is opened.
+         * For the send message function works properly, readyState must be 1.
+         */
+        this.waitForConnection = function (callback, interval) {
+            if (ws.readyState === 1) {
+                callback();
+            } else {
+                var that = this;
+                setTimeout(function () {
+                    that.waitForConnection(callback, interval);
+                }, interval);
             }
         };
 
